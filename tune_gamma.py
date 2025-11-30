@@ -67,7 +67,7 @@ for tc in test_cases:
     print(f"  - {tc['name']}: 期待値 L={tc['expected'][0]}")
 
 print("\n" + "-" * 70)
-print(f"{'ガンマ値':<10} {'平均ΔE':<12} {'詳細':<50}")
+print(f"{ 'ガンマ値':<10} {'平均ΔE00':<12} {'詳細':<50}")
 print("-" * 70)
 
 best_gamma = None
@@ -81,7 +81,8 @@ for gamma in np.linspace(0.5, 3.0, 26):
     
     for tc in test_cases:
         result = km_mix_with_gamma(tc['colors'], tc['ratios'], gamma)
-        error = calculate_delta_e(tc['expected'], result)
+        # CIEDE2000で評価
+        error = calculate_delta_e(tc['expected'], result, method='DE00')
         total_error += error * tc['weight']
         total_weight += tc['weight']
         details.append(f"L={result[0]:.0f}(ΔE={error:.1f})")
@@ -99,7 +100,7 @@ for gamma in np.linspace(0.5, 3.0, 26):
 
 print("-" * 70)
 print(f"\n✅ 最適ガンマ値: {best_gamma:.2f}")
-print(f"   平均誤差: ΔE = {best_error:.2f}")
+print(f"   平均誤差: ΔE00 = {best_error:.2f}")
 
 print("\n" + "=" * 70)
 print("推奨値の検証")
@@ -111,7 +112,7 @@ for tc in test_cases:
     print(f"  期待値: L={tc['expected'][0]}")
     print(f"  計算値: L={result[0]:.1f}")
     print(f"  RGB: {lab_to_rgb(*result)}")
-    print(f"  ΔE: {calculate_delta_e(tc['expected'], result):.2f}")
+    print(f"  ΔE00: {calculate_delta_e(tc['expected'], result, method='DE00'):.2f}")
 
 print("\n" + "=" * 70)
 print(f"utils.pyのガンマ値を {best_gamma:.2f} に変更することを推奨")

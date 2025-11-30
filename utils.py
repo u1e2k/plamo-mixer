@@ -12,6 +12,10 @@ from itertools import combinations
 from typing import List, Tuple, Dict, Optional
 import json
 
+# KMガンマ設定（L*→R変換用）。固定値として採用。
+# チューニングの結果、1.9 を既定値として固定化。
+KM_GAMMA = 1.9
+
 
 def load_color_database(csv_path: str = "color_database.csv") -> pd.DataFrame:
     """色データベースCSVを読み込む"""
@@ -42,22 +46,123 @@ def rgb_to_lab(r: int, g: int, b: int) -> Tuple[float, float, float]:
     return (lab.lab_l, lab.lab_a, lab.lab_b)
 
 
-def calculate_delta_e(target_lab: Tuple[float, float, float], 
-                     result_lab: Tuple[float, float, float]) -> float:
-    """ΔE00を計算(CIEDE2000) - 簡易実装版"""
-    # CIEDE2000の完全実装は複雑なので、ΔE76(ユークリッド距離)を使用
-    # 実用上十分な精度
+def _delta_e_76(target_lab: Tuple[float, float, float], 
+                result_lab: Tuple[float, float, float]) -> float:
+    """ΔE*76 (CIE76) ユークリッド距離"""
     L1, a1, b1 = target_lab
     L2, a2, b2 = result_lab
-    
-    delta_L = L1 - L2
-    delta_a = a1 - a2
-    delta_b = b1 - b2
-    
-    # ΔE*76 (CIE76)
-    delta_e = np.sqrt(delta_L**2 + delta_a**2 + delta_b**2)
-    
-    return float(delta_e)
+    return float(np.sqrt((L1 - L2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2))
+
+
+def _delta_e_00(target_lab: Tuple[float, float, float], 
+                result_lab: Tuple[float, float, float]) -> float:
+    """ΔE00 (CIEDE2000) 実装
+    参考: Sharma et al. (2005) CIEDE2000 Color-Difference Formula
+    入力はLab (L*, a*, b*)。出力はΔE00。
+    """
+    L1, a1, b1 = target_lab
+    L2, a2, b2 = result_lab
+
+    # 平均Chroma
+    C1 = np.sqrt(a1 * a1 + b1 * b1)
+    C2 = np.sqrt(a2 * a2 + b2 * b2)
+    C_bar = (C1 + C2) / 2.0
+
+    # G補正係数
+    C_bar7 = C_bar ** 7
+    G = 0.5 * (1 - np.sqrt(C_bar7 / (C_bar7 + 25 ** 7)))
+
+    # a' の補正
+    a1_prime = (1 + G) * a1
+    a2_prime = (1 + G) * a2
+
+    # C' の再計算
+    C1_prime = np.sqrt(a1_prime * a1_prime + b1 * b1)
+    C2_prime = np.sqrt(a2_prime * a2_prime + b2 * b2)
+    C_bar_prime = (C1_prime + C2_prime) / 2.0
+
+    # h' (色相角) の計算（ラジアン）
+    def _hp(a_prime, b):
+        if a_prime == 0 and b == 0:
+            return 0.0
+        ang = np.degrees(np.arctan2(b, a_prime))
+        return ang + 360 if ang < 0 else ang
+
+    h1_prime = _hp(a1_prime, b1)
+    h2_prime = _hp(a2_prime, b2)
+
+    # ΔL', ΔC', ΔH'
+    dL_prime = L2 - L1
+    dC_prime = C2_prime - C1_prime
+
+    # Δh' の扱い（循環を考慮）
+    if C1_prime * C2_prime == 0:
+        dh_prime = 0.0
+    else:
+        dh_prime = h2_prime - h1_prime
+        if dh_prime > 180:
+            dh_prime -= 360
+        elif dh_prime < -180:
+            dh_prime += 360
+
+    dH_prime = 2.0 * np.sqrt(C1_prime * C2_prime) * np.sin(np.radians(dh_prime / 2.0))
+
+    # 平均L', h'
+    L_bar_prime = (L1 + L2) / 2.0
+    if C1_prime * C2_prime == 0:
+        h_bar_prime = h1_prime + h2_prime
+    else:
+        h_diff = abs(h1_prime - h2_prime)
+        if h_diff > 180:
+            h_bar_prime = (h1_prime + h2_prime + 360) / 2.0 if (h1_prime + h2_prime) < 360 else (h1_prime + h2_prime - 360) / 2.0
+        else:
+            h_bar_prime = (h1_prime + h2_prime) / 2.0
+
+    # T係数
+    T = (
+        1
+        - 0.17 * np.cos(np.radians(h_bar_prime - 30))
+        + 0.24 * np.cos(np.radians(2 * h_bar_prime))
+        + 0.32 * np.cos(np.radians(3 * h_bar_prime + 6))
+        - 0.20 * np.cos(np.radians(4 * h_bar_prime - 63))
+    )
+
+    # Δθ, R_C, R_T
+    delta_theta = 30 * np.exp(-((h_bar_prime - 275) / 25) ** 2)
+    R_C = 2 * np.sqrt((C_bar_prime ** 7) / (C_bar_prime ** 7 + 25 ** 7))
+    R_T = -R_C * np.sin(np.radians(2 * delta_theta))
+
+    # S_L, S_C, S_H（重み付け）
+    S_L = 1 + (0.015 * (L_bar_prime - 50) ** 2) / np.sqrt(20 + (L_bar_prime - 50) ** 2)
+    S_C = 1 + 0.045 * C_bar_prime
+    S_H = 1 + 0.015 * C_bar_prime * T
+
+    # k_L, k_C, k_H（通常1）
+    k_L = 1.0
+    k_C = 1.0
+    k_H = 1.0
+
+    # ΔE00
+    delta_E = np.sqrt(
+        (dL_prime / (k_L * S_L)) ** 2
+        + (dC_prime / (k_C * S_C)) ** 2
+        + (dH_prime / (k_H * S_H)) ** 2
+        + R_T * (dC_prime / (k_C * S_C)) * (dH_prime / (k_H * S_H))
+    )
+
+    return float(delta_E)
+
+
+def calculate_delta_e(target_lab: Tuple[float, float, float], 
+                      result_lab: Tuple[float, float, float],
+                      method: str = "DE00") -> float:
+    """色差ΔEの計算
+    method: "DE00"(CIEDE2000) / "DE76"(CIE76)
+    デフォルトはDE00。必要に応じてDE76に切替可能。
+    """
+    if method.upper() == "DE76":
+        return _delta_e_76(target_lab, result_lab)
+    return _delta_e_00(target_lab, result_lab)
 
 
 def kubelka_munk_mix(colors_lab: List[Tuple[float, float, float]], 
@@ -81,8 +186,8 @@ def kubelka_munk_mix(colors_lab: List[Tuple[float, float, float]],
     # === 各波長帯域でのK/S計算(簡易版: L*, a*, b*の3成分で代表) ===
     
     # L*成分: 明度(全波長の平均的な反射率)
-    # 塗料用に調整したガンマ値(1.8)を使用
-    gamma = 1.8
+    # 塗料用に調整したガンマ値(KM_GAMMA)を使用
+    gamma = KM_GAMMA
     L_values = colors_lab[:, 0]
     reflectances_L = (L_values / 100.0) ** gamma
     epsilon = 1e-6
@@ -142,7 +247,7 @@ def simple_lab_mix(colors_lab: List[Tuple[float, float, float]],
     L_linear = np.sum(colors_lab[:, 0] * ratios)
     
     # 方式B: Kubelka-Munk理論
-    gamma = 2.0  # 塗料用に調整
+    gamma = KM_GAMMA  # 設定可能ガンマを使用
     reflectances = (colors_lab[:, 0] / 100.0) ** gamma
     epsilon = 1e-6
     reflectances = np.clip(reflectances, epsilon, 1.0 - epsilon)
@@ -489,8 +594,10 @@ def find_best_mix_optimized(target_lab: Tuple[float, float, float],
     }
 
 
-def format_result_text(result: Dict) -> str:
-    """結果を見やすいテキストに整形"""
+def format_result_text(result: Dict, method: str = "DE00") -> str:
+    """結果を見やすいテキストに整形
+    method: "DE00" または "DE76" に応じて色差を再計算
+    """
     lines = []
     lines.append("【混色レシピ】")
     lines.append("")
@@ -502,13 +609,15 @@ def format_result_text(result: Dict) -> str:
     lines.append("")
     lines.append(f"合計: 10.0g")
     lines.append("")
-    lines.append(f"色差 ΔE = {result['delta_e']:.1f}")
+    # 選択メソッドで色差再計算
+    delta_e_val = calculate_delta_e(result['target_lab'], result['mixed_lab'], method=method)
+    lines.append(f"色差 ΔE({method}) = {delta_e_val:.1f}")
     
-    if result['delta_e'] < 3.0:
+    if delta_e_val < 3.0:
         lines.append("→ 非常に近い色です")
-    elif result['delta_e'] < 6.0:
+    elif delta_e_val < 6.0:
         lines.append("→ 十分近い色です")
-    elif result['delta_e'] < 10.0:
+    elif delta_e_val < 10.0:
         lines.append("→ やや差がありますが使用可能")
     else:
         lines.append("→ 差があります（手持ち塗料を増やすと精度向上）")

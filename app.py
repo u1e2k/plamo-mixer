@@ -14,7 +14,9 @@ from utils import (
     lab_to_rgb,
     rgb_to_lab,
     find_best_mix_optimized,
-    format_result_text
+    format_result_text,
+    calculate_delta_e,
+    KM_GAMMA
 )
 
 # ページ設定
@@ -50,6 +52,16 @@ if 'result' not in st.session_state:
 
 # サイドバー: 設定
 st.sidebar.header("⚙️ 設定")
+# 色差メソッド選択（DE00既定）
+delta_e_method = st.sidebar.selectbox(
+    "色差メソッド",
+    ["DE00", "DE76"],
+    index=0,
+    help="DE00は人の知覚により近い評価。DE76はユークリッド距離"
+)
+
+# 現在のKMガンマ表示
+st.sidebar.markdown(f"**KMガンマ(γ):** {KM_GAMMA}")
 
 # 1. 目標色の選択方法
 st.sidebar.subheader("1️⃣ 目標色を選ぶ")
@@ -250,7 +262,8 @@ with col2:
         result = st.session_state.result
         
         # 色差評価
-        delta_e = result['delta_e']
+        # 色差を選択メソッドに合わせて再計算（最終表示用）
+        delta_e = calculate_delta_e(result['target_lab'], result['mixed_lab'], method=delta_e_method)
         if delta_e < 3.0:
             st.success(f"✅ 非常に近い色です (ΔE = {delta_e:.1f})")
         elif delta_e < 6.0:
@@ -290,7 +303,11 @@ with col2:
         
         # テキスト出力
         st.markdown("### 📄 テキスト出力")
-        st.code(format_result_text(result), language="text")
+        # テキスト出力も選択メソッドに追従
+        st.code(format_result_text(result, method=delta_e_method), language="text")
+
+        # 補足情報
+        st.caption(f"評価メソッド: {delta_e_method} / KMガンマ(γ): {KM_GAMMA}")
     else:
         st.info("「最適配合を計算」ボタンを押してください")
 

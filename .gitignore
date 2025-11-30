@@ -2,6 +2,7 @@
 # Python - https://github.com/github/gitignore/blob/master/Python.gitignore
 ########################################################################
 # Byte-compiled / optimized / DLL files
+.pyc
 __pycache__/
 *.py[cod]
 *$py.class
@@ -131,3 +132,4 @@ e2e_playwright/__snapshots__/*
 ########################################################################
 protoc-*-linux-x86_64.zip
 python_cache_key.md5
+__pycache__/utils.cpython-312.pyc

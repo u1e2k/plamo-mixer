@@ -3,7 +3,7 @@
 """
 
 import pandas as pd
-from utils import find_best_mix_optimized, rgb_to_lab, lab_to_rgb
+from utils import find_best_mix_optimized, rgb_to_lab, lab_to_rgb, calculate_delta_e
 
 # グレーを目標
 target_rgb = (128, 128, 128)
@@ -47,7 +47,7 @@ print(f"最適化完了 ({elapsed:.1f}秒)\n")
 
 print("【結果】")
 print(f"使用色数: {result['n_colors']}色")
-print(f"色差 ΔE: {result['delta_e']:.2f}\n")
+print(f"色差 ΔE00: {result['delta_e']:.2f}\n")
 
 print("【配合レシピ】")
 for item in result['recipe']:
@@ -56,6 +56,10 @@ for item in result['recipe']:
 mixed_rgb = lab_to_rgb(*result['mixed_lab'])
 print(f"\n目標色 RGB: {target_rgb}")
 print(f"混色結果 RGB: {mixed_rgb}")
+
+# 参考: DE76での色差も確認
+de76 = calculate_delta_e(target_lab, result['mixed_lab'], method='DE76')
+print(f"参考(ΔE76): {de76:.2f}")
 
 if result['n_colors'] >= 2:
     print(f"\n✅ 合格!")
