@@ -15,9 +15,9 @@ from utils import (
     rgb_to_lab,
     find_best_mix_optimized,
     format_result_text,
-    calculate_delta_e,
-    KM_GAMMA
+    calculate_delta_e
 )
+import utils
 
 # ページ設定
 st.set_page_config(
@@ -61,7 +61,7 @@ delta_e_method = st.sidebar.selectbox(
 )
 
 # 現在のKMガンマ表示
-st.sidebar.markdown(f"**KMガンマ(γ):** {KM_GAMMA}")
+st.sidebar.markdown(f"**KMガンマ(γ):** {utils.KM_GAMMA}")
 
 # 1. 目標色の選択方法
 st.sidebar.subheader("1️⃣ 目標色を選ぶ")
@@ -307,7 +307,7 @@ with col2:
         st.code(format_result_text(result, method=delta_e_method), language="text")
 
         # 補足情報
-        st.caption(f"評価メソッド: {delta_e_method} / KMガンマ(γ): {KM_GAMMA}")
+        st.caption(f"評価メソッド: {delta_e_method} / KMガンマ(γ): {utils.KM_GAMMA}")
     else:
         st.info("「最適配合を計算」ボタンを押してください")
 
