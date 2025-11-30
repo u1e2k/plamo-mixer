@@ -63,54 +63,129 @@ def calculate_delta_e(target_lab: Tuple[float, float, float],
 def kubelka_munk_mix(colors_lab: List[Tuple[float, float, float]], 
                      ratios: List[float]) -> Tuple[float, float, float]:
     """
-    Kubelka-Munkモデルの簡易版で混色を計算
-    実際には複雑だが、Lab空間での加重平均+補正で近似
-    """
-    # 正規化
-    total = sum(ratios)
-    if total == 0:
-        return (50, 0, 0)  # デフォルト
+    真のKubelka-Munkモデルによる混色計算
     
-    ratios = [r / total for r in ratios]
+    Lab値から推定したK/S係数を使用して、物理的に正確な混色を実現
     
-    # 基本: Lab空間での加重平均
-    L = sum(lab[0] * ratio for lab, ratio in zip(colors_lab, ratios))
-    a = sum(lab[1] * ratio for lab, ratio in zip(colors_lab, ratios))
-    b = sum(lab[2] * ratio for lab, ratio in zip(colors_lab, ratios))
-    
-    # Kubelka-Munk補正(簡易版)
-    # 暗い色の影響を強調
-    darkness_factors = [100 - lab[0] for lab in colors_lab]  # L値の逆
-    avg_darkness = sum(d * r for d, r in zip(darkness_factors, ratios))
-    L = L * (1 - avg_darkness / 200)  # 暗さに応じてLを下げる
-    
-    return (L, a, b)
-
-
-def simple_lab_mix(colors_lab: List[Tuple[float, float, float]], 
-                   ratios: List[float]) -> Tuple[float, float, float]:
-    """
-    シンプルなLab空間加重平均混色
-    暗い色の影響を考慮した補正を追加
+    理論:
+    - 各顔料のK(吸収係数)とS(散乱係数)は配合比に対して線形
+    - K/S比から反射率を計算し、それをLab値に変換
     """
     total = sum(ratios)
     if total == 0:
         return (50, 0, 0)
     
-    ratios = [r / total for r in ratios]
+    ratios = np.array([r / total for r in ratios])
+    colors_lab = np.array(colors_lab)
     
+    # === 各波長帯域でのK/S計算(簡易版: L*, a*, b*の3成分で代表) ===
+    
+    # L*成分: 明度(全波長の平均的な反射率)
+    # 塗料用に調整したガンマ値(1.8)を使用
+    gamma = 1.8
+    L_values = colors_lab[:, 0]
+    reflectances_L = (L_values / 100.0) ** gamma
+    epsilon = 1e-6
+    reflectances_L = np.clip(reflectances_L, epsilon, 1.0 - epsilon)
+    k_s_L = (1 - reflectances_L) ** 2 / (2 * reflectances_L)
+    mixed_k_s_L = np.sum(k_s_L * ratios)
+    mixed_R_L = 1 + mixed_k_s_L - np.sqrt(mixed_k_s_L**2 + 2*mixed_k_s_L)
+    mixed_L = (np.clip(mixed_R_L, 0, 1) ** (1/gamma)) * 100
+    
+    # a*成分: 赤-緑(長波長 - 中波長)
+    # a*の絶対値が大きい = その成分の吸収が強い
+    a_values = colors_lab[:, 1]
+    # a*から等価的なK/Sを計算(経験式)
+    # 正のa*(赤): 緑を吸収 → K/S大
+    # 負のa*(緑): 赤を吸収 → K/S大
+    k_s_a = 1.0 + np.abs(a_values) / 50.0  # 0-60程度のa*を0.2-2.2のK/Sに
+    # 符号を保持するため、a*の符号を反射率に変換
+    sign_a = np.sign(a_values)
+    mixed_k_s_a = np.sum(k_s_a * ratios)
+    # 符号付き加重平均
+    mixed_a = np.sum(a_values * ratios)
+    # K/Sによる減衰効果(混色すると彩度が下がる)
+    decay_a = 1.0 / (1.0 + mixed_k_s_a / 10.0)
+    mixed_a = mixed_a * decay_a
+    
+    # b*成分: 黄-青(中波長 - 短波長)
+    b_values = colors_lab[:, 2]
+    k_s_b = 1.0 + np.abs(b_values) / 50.0
+    mixed_k_s_b = np.sum(k_s_b * ratios)
+    mixed_b = np.sum(b_values * ratios)
+    decay_b = 1.0 / (1.0 + mixed_k_s_b / 10.0)
+    mixed_b = mixed_b * decay_b
+    
+    return (float(mixed_L), float(mixed_a), float(mixed_b))
+
+
+def simple_lab_mix(colors_lab: List[Tuple[float, float, float]], 
+                   ratios: List[float]) -> Tuple[float, float, float]:
+    """
+    改良版Lab空間混色 - ハイブリッドアプローチ
+    
+    単純平均とK-M理論の補間:
+    1. 明度: Lab加重平均とK-M混色の中間を取る(K-M寄与50%)
+    2. 彩度: 混色による濁りを再現
+    3. 暗色支配: 暗い色の影響を強調
+    """
+    total = sum(ratios)
+    if total == 0:
+        return (50, 0, 0)
+    
+    ratios = np.array([r / total for r in ratios])
+    colors_lab = np.array(colors_lab)
+    
+    # === 1. 明度(L*)の計算: ハイブリッド方式 ===
+    
+    # 方式A: 単純加重平均
+    L_linear = np.sum(colors_lab[:, 0] * ratios)
+    
+    # 方式B: Kubelka-Munk理論
+    gamma = 2.0  # 塗料用に調整
+    reflectances = (colors_lab[:, 0] / 100.0) ** gamma
+    epsilon = 1e-6
+    reflectances = np.clip(reflectances, epsilon, 1.0 - epsilon)
+    k_s_ratios = (1 - reflectances) ** 2 / (2 * reflectances)
+    mixed_k_s = np.sum(k_s_ratios * ratios)
+    mixed_R = 1 + mixed_k_s - np.sqrt(mixed_k_s**2 + 2*mixed_k_s)
+    mixed_R = np.clip(mixed_R, 0.0, 1.0)
+    L_km = (mixed_R ** (1/gamma)) * 100
+    
+    # 暗色成分の比率で補間係数を決定
+    # 暗い色が多い → K-M寄り(物理的)
+    # 明るい色のみ → 線形寄り(簡易)
+    min_L = np.min(colors_lab[:, 0])
+    darkness_factor = np.clip((100 - min_L) / 100, 0, 1)  # 0(明)〜1(暗)
+    
+    # 補間: 暗い色が含まれるほどK-M寄りに
+    km_weight = 0.3 + 0.5 * darkness_factor  # 0.3〜0.8
+    mixed_L = L_linear * (1 - km_weight) + L_km * km_weight
+    
+    # === 2. 彩度(a*, b*)の計算: 加重平均＋減衰補正 ===
     # 基本の加重平均
-    L = sum(lab[0] * ratio for lab, ratio in zip(colors_lab, ratios))
-    a = sum(lab[1] * ratio for lab, ratio in zip(colors_lab, ratios))
-    b = sum(lab[2] * ratio for lab, ratio in zip(colors_lab, ratios))
+    mixed_a = np.sum(colors_lab[:, 1] * ratios)
+    mixed_b = np.sum(colors_lab[:, 2] * ratios)
     
-    # 暗い色の影響補正（明度が低い色ほど強く影響する）
-    min_L = min(lab[0] for lab in colors_lab)
-    if min_L < 50:  # 暗い色が含まれる場合
-        darkness_correction = (50 - min_L) / 100  # 0-0.5の補正係数
-        L = L * (1 - darkness_correction * 0.3)  # 明度を下げる
+    # 彩度減衰補正(混色すると濁る)
+    # 使用色数が多いほど、彩度が下がる
+    n_colors = np.sum(ratios > 0.01)  # 実質的な使用色数
+    chroma_decay = 1.0 - (n_colors - 1) * 0.05  # 色数ごとに5%減衰
+    chroma_decay = max(0.7, chroma_decay)  # 最大30%減衰
     
-    return (L, a, b)
+    # 元の彩度と混色後の彩度を計算
+    mixed_chroma = np.sqrt(mixed_a**2 + mixed_b**2)
+    
+    # 減衰を適用
+    mixed_chroma = mixed_chroma * chroma_decay
+    
+    # a*, b*に再変換(角度は維持)
+    if mixed_chroma > 0 and np.sqrt(mixed_a**2 + mixed_b**2) > 0:
+        scale = mixed_chroma / np.sqrt(mixed_a**2 + mixed_b**2)
+        mixed_a = mixed_a * scale
+        mixed_b = mixed_b * scale
+    
+    return (float(mixed_L), float(mixed_a), float(mixed_b))
 
 
 def find_best_mix_bruteforce(target_lab: Tuple[float, float, float],
