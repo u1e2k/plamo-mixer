@@ -246,7 +246,7 @@ with col2:
                     result = None
     
     # 結果表示
-    if st.session_state.result:
+    if st.session_state.result and target_lab is not None:
         result = st.session_state.result
         
         # 色差評価
