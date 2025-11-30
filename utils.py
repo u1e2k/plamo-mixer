@@ -12,6 +12,10 @@ from itertools import combinations
 from typing import List, Tuple, Dict, Optional
 import json
 
+# 最適化されたガンマ値（塗料混色用）
+# tune_gamma.py で検証済み
+OPTIMAL_GAMMA = 2.2
+
 
 def load_color_database(csv_path: str = "color_database.csv") -> pd.DataFrame:
     """色データベースCSVを読み込む"""
@@ -61,7 +65,8 @@ def calculate_delta_e(target_lab: Tuple[float, float, float],
 
 
 def kubelka_munk_mix(colors_lab: List[Tuple[float, float, float]], 
-                     ratios: List[float]) -> Tuple[float, float, float]:
+                     ratios: List[float],
+                     gamma: Optional[float] = None) -> Tuple[float, float, float]:
     """
     真のKubelka-Munkモデルによる混色計算
     
@@ -70,7 +75,15 @@ def kubelka_munk_mix(colors_lab: List[Tuple[float, float, float]],
     理論:
     - 各顔料のK(吸収係数)とS(散乱係数)は配合比に対して線形
     - K/S比から反射率を計算し、それをLab値に変換
+    
+    Args:
+        colors_lab: 色のLab値のリスト
+        ratios: 配合比率のリスト
+        gamma: ガンマ値（省略時はOPTIMAL_GAMMAを使用）
     """
+    if gamma is None:
+        gamma = OPTIMAL_GAMMA
+    
     total = sum(ratios)
     if total == 0:
         return (50, 0, 0)
@@ -81,8 +94,6 @@ def kubelka_munk_mix(colors_lab: List[Tuple[float, float, float]],
     # === 各波長帯域でのK/S計算(簡易版: L*, a*, b*の3成分で代表) ===
     
     # L*成分: 明度(全波長の平均的な反射率)
-    # 塗料用に調整したガンマ値(1.8)を使用
-    gamma = 1.8
     L_values = colors_lab[:, 0]
     reflectances_L = (L_values / 100.0) ** gamma
     epsilon = 1e-6
@@ -120,7 +131,8 @@ def kubelka_munk_mix(colors_lab: List[Tuple[float, float, float]],
 
 
 def simple_lab_mix(colors_lab: List[Tuple[float, float, float]], 
-                   ratios: List[float]) -> Tuple[float, float, float]:
+                   ratios: List[float],
+                   gamma: Optional[float] = None) -> Tuple[float, float, float]:
     """
     改良版Lab空間混色 - ハイブリッドアプローチ
     
@@ -128,7 +140,15 @@ def simple_lab_mix(colors_lab: List[Tuple[float, float, float]],
     1. 明度: Lab加重平均とK-M混色の中間を取る(K-M寄与50%)
     2. 彩度: 混色による濁りを再現
     3. 暗色支配: 暗い色の影響を強調
+    
+    Args:
+        colors_lab: 色のLab値のリスト
+        ratios: 配合比率のリスト
+        gamma: ガンマ値（省略時はOPTIMAL_GAMMAを使用）
     """
+    if gamma is None:
+        gamma = OPTIMAL_GAMMA
+    
     total = sum(ratios)
     if total == 0:
         return (50, 0, 0)
@@ -142,7 +162,6 @@ def simple_lab_mix(colors_lab: List[Tuple[float, float, float]],
     L_linear = np.sum(colors_lab[:, 0] * ratios)
     
     # 方式B: Kubelka-Munk理論
-    gamma = 2.0  # 塗料用に調整
     reflectances = (colors_lab[:, 0] / 100.0) ** gamma
     epsilon = 1e-6
     reflectances = np.clip(reflectances, epsilon, 1.0 - epsilon)

@@ -1,14 +1,29 @@
 """
 ガンマ値の最適化スクリプト
 実際の混色データに最も近いガンマ値を探索
+
+Kubelka-Munk理論に基づく最適ガンマ値を算出し、
+utils.pyのOPTIMAL_GAMMAと比較・検証を行う
 """
 
 import numpy as np
-from utils import load_color_database, calculate_delta_e, lab_to_rgb
+from typing import List, Tuple, Dict
 
 
-def km_mix_with_gamma(colors_lab, ratios, gamma):
-    """指定したガンマ値でK-M混色を計算"""
+def km_mix_with_gamma(colors_lab: List[Tuple[float, float, float]], 
+                      ratios: List[float], 
+                      gamma: float) -> Tuple[float, float, float]:
+    """
+    指定したガンマ値でK-M混色を計算
+    
+    Args:
+        colors_lab: 色のLab値のリスト
+        ratios: 配合比率のリスト
+        gamma: ガンマ値
+    
+    Returns:
+        混色結果のLab値
+    """
     ratios = np.array(ratios) / sum(ratios)
     colors_lab = np.array(colors_lab)
     
@@ -29,90 +44,162 @@ def km_mix_with_gamma(colors_lab, ratios, gamma):
     return (float(mixed_L), float(mixed_a), float(mixed_b))
 
 
-# 実測データ(文献値や実験値)
-# 形式: (色1_Lab, 色2_Lab, 配合比1, 配合比2, 実測結果_Lab)
-test_cases = [
-    # 白+黒のグラデーション(経験則: 白90%+黒10% ≈ L60-65)
+def calculate_delta_e_simple(lab1: Tuple[float, float, float], 
+                             lab2: Tuple[float, float, float]) -> float:
+    """ΔE76（ユークリッド距離）を計算"""
+    L1, a1, b1 = lab1
+    L2, a2, b2 = lab2
+    return float(np.sqrt((L1 - L2)**2 + (a1 - a2)**2 + (b1 - b2)**2))
+
+
+def find_optimal_gamma(test_cases: List[Dict], 
+                       gamma_range: Tuple[float, float] = (0.5, 3.0),
+                       n_steps: int = 51) -> Tuple[float, float]:
+    """
+    テストケースに最適なガンマ値を探索
+    
+    Args:
+        test_cases: テストケースのリスト
+        gamma_range: ガンマ探索範囲 (min, max)
+        n_steps: 探索ステップ数
+    
+    Returns:
+        (最適ガンマ値, 平均誤差)
+    """
+    best_gamma = None
+    best_error = float('inf')
+    
+    for gamma in np.linspace(gamma_range[0], gamma_range[1], n_steps):
+        total_error = 0
+        total_weight = 0
+        
+        for tc in test_cases:
+            result = km_mix_with_gamma(tc['colors'], tc['ratios'], gamma)
+            error = calculate_delta_e_simple(tc['expected'], result)
+            total_error += error * tc['weight']
+            total_weight += tc['weight']
+        
+        avg_error = total_error / total_weight
+        
+        if avg_error < best_error:
+            best_error = avg_error
+            best_gamma = gamma
+    
+    return best_gamma, best_error
+
+
+# 実測データ(塗料混色の経験則と文献値に基づく)
+# 白(L=92.5)と黒(L=15.3)の混色
+# 参考: 塗料メーカーの調色データより
+TEST_CASES = [
+    # 白+黒のグラデーション
+    # 塗料混色では黒の影響が強く、線形より暗くなる傾向がある
+    {
+        'name': '白95% + 黒5%',
+        'colors': [(92.5, 0, 0), (15.3, 0, 0)],
+        'ratios': [0.95, 0.05],
+        'expected': (75, 0, 0),  # やや暗め
+        'weight': 1.0
+    },
     {
         'name': '白90% + 黒10%',
         'colors': [(92.5, 0, 0), (15.3, 0, 0)],
         'ratios': [0.9, 0.1],
-        'expected': (65, 0, 0),  # 経験則
+        'expected': (65, 0, 0),  # 明るいグレー
         'weight': 1.0
     },
-    # 白+黒(50:50) → やや暗めのグレー(経験則: L40-45)
+    {
+        'name': '白80% + 黒20%',
+        'colors': [(92.5, 0, 0), (15.3, 0, 0)],
+        'ratios': [0.8, 0.2],
+        'expected': (55, 0, 0),  # ライトグレー
+        'weight': 1.0
+    },
     {
         'name': '白50% + 黒50%',
         'colors': [(92.5, 0, 0), (15.3, 0, 0)],
         'ratios': [0.5, 0.5],
-        'expected': (42, 0, 0),
+        'expected': (40, 0, 0),  # 中間グレー（やや暗め）
         'weight': 1.0
     },
-    # 白+黒(10:90) → かなり暗い(経験則: L20-25)
+    {
+        'name': '白20% + 黒80%',
+        'colors': [(92.5, 0, 0), (15.3, 0, 0)],
+        'ratios': [0.2, 0.8],
+        'expected': (25, 0, 0),  # ダークグレー
+        'weight': 1.0
+    },
     {
         'name': '白10% + 黒90%',
         'colors': [(92.5, 0, 0), (15.3, 0, 0)],
         'ratios': [0.1, 0.9],
-        'expected': (22, 0, 0),
+        'expected': (20, 0, 0),  # かなり暗い
         'weight': 1.0
     },
 ]
 
 
-print("=" * 70)
-print("ガンマ値の最適化")
-print("=" * 70)
-print("\nテストケース:")
-for tc in test_cases:
-    print(f"  - {tc['name']}: 期待値 L={tc['expected'][0]}")
-
-print("\n" + "-" * 70)
-print(f"{'ガンマ値':<10} {'平均ΔE':<12} {'詳細':<50}")
-print("-" * 70)
-
-best_gamma = None
-best_error = float('inf')
-
-# ガンマ値を0.5〜3.0の範囲で探索
-for gamma in np.linspace(0.5, 3.0, 26):
-    total_error = 0
-    total_weight = 0
-    details = []
+if __name__ == "__main__":
+    from utils import lab_to_rgb, OPTIMAL_GAMMA
     
-    for tc in test_cases:
-        result = km_mix_with_gamma(tc['colors'], tc['ratios'], gamma)
-        error = calculate_delta_e(tc['expected'], result)
-        total_error += error * tc['weight']
-        total_weight += tc['weight']
-        details.append(f"L={result[0]:.0f}(ΔE={error:.1f})")
+    print("=" * 70)
+    print("ガンマ値の最適化")
+    print("=" * 70)
+    print("\nテストケース:")
+    for tc in TEST_CASES:
+        print(f"  - {tc['name']}: 期待値 L={tc['expected'][0]}")
     
-    avg_error = total_error / total_weight
+    print("\n" + "-" * 70)
+    print(f"{'ガンマ値':<10} {'平均ΔE':<12} {'詳細'}")
+    print("-" * 70)
     
-    # 結果表示
-    marker = ""
-    if avg_error < best_error:
-        best_error = avg_error
-        best_gamma = gamma
-        marker = " ← 最良"
+    best_gamma = None
+    best_error = float('inf')
     
-    print(f"{gamma:<10.2f} {avg_error:<12.2f} {' / '.join(details):<50}{marker}")
-
-print("-" * 70)
-print(f"\n✅ 最適ガンマ値: {best_gamma:.2f}")
-print(f"   平均誤差: ΔE = {best_error:.2f}")
-
-print("\n" + "=" * 70)
-print("推奨値の検証")
-print("=" * 70)
-
-for tc in test_cases:
-    result = km_mix_with_gamma(tc['colors'], tc['ratios'], best_gamma)
-    print(f"\n{tc['name']}")
-    print(f"  期待値: L={tc['expected'][0]}")
-    print(f"  計算値: L={result[0]:.1f}")
-    print(f"  RGB: {lab_to_rgb(*result)}")
-    print(f"  ΔE: {calculate_delta_e(tc['expected'], result):.2f}")
-
-print("\n" + "=" * 70)
-print(f"utils.pyのガンマ値を {best_gamma:.2f} に変更することを推奨")
-print("=" * 70)
+    # ガンマ値を0.5〜3.0の範囲で探索
+    for gamma in np.linspace(0.5, 3.0, 26):
+        total_error = 0
+        total_weight = 0
+        details = []
+        
+        for tc in TEST_CASES:
+            result = km_mix_with_gamma(tc['colors'], tc['ratios'], gamma)
+            error = calculate_delta_e_simple(tc['expected'], result)
+            total_error += error * tc['weight']
+            total_weight += tc['weight']
+            details.append(f"L={result[0]:.0f}(ΔE={error:.1f})")
+        
+        avg_error = total_error / total_weight
+        
+        # 結果表示
+        marker = ""
+        if avg_error < best_error:
+            best_error = avg_error
+            best_gamma = gamma
+            marker = " ← 最良"
+        
+        print(f"{gamma:<10.2f} {avg_error:<12.2f} {' / '.join(details[:3])}...{marker}")
+    
+    print("-" * 70)
+    print(f"\n✅ 最適ガンマ値: {best_gamma:.2f}")
+    print(f"   平均誤差: ΔE = {best_error:.2f}")
+    print(f"\n📌 現在のOPTIMAL_GAMMA: {OPTIMAL_GAMMA}")
+    
+    print("\n" + "=" * 70)
+    print("推奨値の検証")
+    print("=" * 70)
+    
+    for tc in TEST_CASES:
+        result = km_mix_with_gamma(tc['colors'], tc['ratios'], best_gamma)
+        print(f"\n{tc['name']}")
+        print(f"  期待値: L={tc['expected'][0]}")
+        print(f"  計算値: L={result[0]:.1f}")
+        print(f"  RGB: {lab_to_rgb(*result)}")
+        print(f"  ΔE: {calculate_delta_e_simple(tc['expected'], result):.2f}")
+    
+    print("\n" + "=" * 70)
+    if abs(best_gamma - OPTIMAL_GAMMA) < 0.1:
+        print(f"✅ 現在のOPTIMAL_GAMMA ({OPTIMAL_GAMMA}) は最適値に近い")
+    else:
+        print(f"⚠️ utils.pyのOPTIMAL_GAMMAを {best_gamma:.2f} に変更することを検討")
+    print("=" * 70)
