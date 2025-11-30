@@ -13,7 +13,15 @@ from typing import List, Tuple, Dict, Optional
 import json
 
 # 最適化されたガンマ値（塗料混色用）
-# tune_gamma.py で検証済み
+# 
+# ガンマ値は、Lab空間のL*値から反射率Rへの変換に使用される指数パラメータ
+# R = (L* / 100)^gamma
+#
+# - 低いガンマ（~1.0）: 線形に近い明度変換。明るめの結果
+# - 高いガンマ（~3.0）: 非線形な明度変換。暗めの結果
+#
+# 2.2はsRGBのガンマ値に近く、塗料混色の実験値とも整合性が高い
+# tune_gamma.py で最適値を検証可能
 OPTIMAL_GAMMA = 2.2
 
 

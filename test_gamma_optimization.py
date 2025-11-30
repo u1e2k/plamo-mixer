@@ -256,7 +256,3 @@ class TestIntegration:
         result_chroma = np.sqrt(result[1]**2 + result[2]**2)
         
         assert result_chroma < original_chroma
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])

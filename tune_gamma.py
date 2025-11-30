@@ -178,7 +178,8 @@ if __name__ == "__main__":
             best_gamma = gamma
             marker = " ← 最良"
         
-        print(f"{gamma:<10.2f} {avg_error:<12.2f} {' / '.join(details[:3])}...{marker}")
+        details_str = ' / '.join(details[:3]) + ('...' if len(details) > 3 else '')
+        print(f"{gamma:<10.2f} {avg_error:<12.2f} {details_str}{marker}")
     
     print("-" * 70)
     print(f"\n✅ 最適ガンマ値: {best_gamma:.2f}")
