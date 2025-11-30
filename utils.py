@@ -300,8 +300,11 @@ def find_best_mix_optimized(target_lab: Tuple[float, float, float],
                             exclude_white_black: bool = False,
                             thinner_ratio: float = 0.0) -> Dict:
     """
-    高速版: 差分進化アルゴリズムで最適化
-    色の選択と配合比を同時最適化
+    改良版: グリッドサーチによる高速最適化
+    
+    1. 事前選択: ΔEが小さい候補色を選ぶ(15色)
+    2. 全組み合わせを試す: 1色〜max_colors色
+    3. 各組み合わせで配合比をグリッドサーチ(5%刻み)
     """
     # フィルタリング
     df = available_colors.copy()
@@ -315,71 +318,125 @@ def find_best_mix_optimized(target_lab: Tuple[float, float, float],
         df = df[~df['code'].isin(exclude_codes)]
     
     all_colors_lab = [(row['L'], row['a'], row['b']) for _, row in df.iterrows()]
-    n_available = len(df)
     
-    # 目的関数
-    def objective(x):
-        # x は n_available 次元のベクトル(各色の配合比)
-        # 5%未満は使わない
-        ratios = np.array(x)
-        ratios[ratios < 0.05] = 0  # 5%未満は切り捨て
-        
-        # 使用色数チェック
-        n_used = np.sum(ratios > 0)
-        if n_used > max_colors:
-            return 1000.0  # ペナルティ
-        
-        if np.sum(ratios) == 0:
-            return 1000.0
-        
-        # 正規化
-        ratios = ratios / np.sum(ratios)
-        
-        # 使用色のみ抽出
-        used_indices = np.where(ratios > 0)[0]
-        used_colors = [all_colors_lab[i] for i in used_indices]
-        used_ratios = ratios[used_indices].tolist()
-        
-        # 混色計算
-        mixed = simple_lab_mix(used_colors, used_ratios)
-        delta_e = calculate_delta_e(target_lab, mixed)
-        
-        # 色数が少ないほうが良い(わずかにボーナス)
-        complexity_penalty = 0.5 * n_used
-        
-        return delta_e + complexity_penalty
+    # === ステップ1: 候補色の事前選択 ===
+    color_scores = []
+    for i, lab in enumerate(all_colors_lab):
+        delta_e = calculate_delta_e(target_lab, lab)
+        color_scores.append((i, delta_e))
     
-    # 境界
-    bounds = [(0, 1) for _ in range(n_available)]
+    # ΔEでソートし、上位15色を選択
+    color_scores.sort(key=lambda x: x[1])
+    n_candidates = min(15, len(all_colors_lab))
+    selected_indices = [idx for idx, _ in color_scores[:n_candidates]]
     
-    # 差分進化で最適化(高速)
-    result = differential_evolution(objective, bounds, 
-                                   maxiter=100, 
-                                   popsize=10,
-                                   seed=42,
-                                   workers=1,
-                                   polish=True)
+    # === ステップ2: 組み合わせ探索 ===
+    best_result = None
+    best_delta_e = float('inf')
     
-    # 結果を整形
-    ratios = result.x
-    ratios[ratios < 0.05] = 0  # 5%未満切り捨て
+    # 1色の場合
+    for idx in selected_indices:
+        lab = all_colors_lab[idx]
+        delta_e = calculate_delta_e(target_lab, lab)
+        
+        if delta_e < best_delta_e:
+            best_delta_e = delta_e
+            best_result = {
+                'indices': [idx],
+                'ratios': [1.0],
+                'delta_e': delta_e,
+                'mixed_lab': lab
+            }
     
-    if np.sum(ratios) == 0:
-        # 全て5%未満の場合は最大値のみ使用
-        max_idx = np.argmax(result.x)
-        ratios = np.zeros_like(result.x)
-        ratios[max_idx] = 1.0
+    # 2色の場合(グリッドサーチ: 5%刻み)
+    if max_colors >= 2:
+        for combo in combinations(selected_indices, 2):
+            labs = [all_colors_lab[i] for i in combo]
+            
+            # 5%刻みで探索(0.05, 0.10, ..., 0.95)
+            for r1 in [i/20 for i in range(1, 20)]:  # 0.05〜0.95
+                r2 = 1.0 - r1
+                mixed = kubelka_munk_mix(labs, [r1, r2])
+                delta_e = calculate_delta_e(target_lab, mixed)
+                
+                if delta_e < best_delta_e:
+                    best_delta_e = delta_e
+                    best_result = {
+                        'indices': list(combo),
+                        'ratios': [r1, r2],
+                        'delta_e': delta_e,
+                        'mixed_lab': mixed
+                    }
+    
+    # 3色の場合(グリッドサーチ: 10%刻み - 組み合わせ多いため粗く)
+    if max_colors >= 3:
+        for combo in combinations(selected_indices, 3):
+            labs = [all_colors_lab[i] for i in combo]
+            
+            # 10%刻みで探索
+            for r1 in [i/10 for i in range(1, 10)]:  # 0.1〜0.9
+                for r2 in [i/10 for i in range(1, 10)]:
+                    r3 = 1.0 - r1 - r2
+                    if r3 < 0.1 or r3 > 0.9:  # r3も10%以上必要
+                        continue
+                    
+                    mixed = kubelka_munk_mix(labs, [r1, r2, r3])
+                    delta_e = calculate_delta_e(target_lab, mixed)
+                    
+                    if delta_e < best_delta_e:
+                        best_delta_e = delta_e
+                        best_result = {
+                            'indices': list(combo),
+                            'ratios': [r1, r2, r3],
+                            'delta_e': delta_e,
+                            'mixed_lab': mixed
+                        }
+    
+    # 4色以上は組み合わせ爆発するので省略(3色で十分)
+    
+    if best_result is None:
+        # フォールバック
+        best_idx = selected_indices[0]
+        best_result = {
+            'indices': [best_idx],
+            'ratios': [1.0],
+            'delta_e': color_scores[0][1],
+            'mixed_lab': all_colors_lab[best_idx]
+        }
+    
+    # === ステップ3: 結果の整形 ===
+    indices = best_result['indices']
+    ratios = best_result['ratios']
+    
+    # 5%未満フィルタ
+    ratios_filtered = []
+    indices_filtered = []
+    for i, r in enumerate(ratios):
+        if r >= 0.05:  # 5%以上のみ
+            ratios_filtered.append(r)
+            indices_filtered.append(indices[i])
+    
+    # フィルタ後に空の場合は最大値のみ
+    if len(ratios_filtered) == 0:
+        max_idx_pos = np.argmax(ratios)
+        ratios_filtered = [1.0]
+        indices_filtered = [indices[max_idx_pos]]
     else:
-        ratios = ratios / np.sum(ratios)
+        # 正規化
+        total = sum(ratios_filtered)
+        ratios_filtered = [r / total for r in ratios_filtered]
     
-    used_indices = np.where(ratios > 0)[0]
+    # 総量10gで整形
+    total_grams = 10.0
+    used_indices = indices_filtered
+    ratios = ratios_filtered
     
     # 総量を10gに設定（実用的な量）
     total_grams = 10.0
     
     formatted_recipe = []
-    for i in used_indices:
-        row = df.iloc[i]
+    for i, idx in enumerate(used_indices):
+        row = df.iloc[idx]  # 元のdfから取得
         ratio_percent = round(ratios[i] * 100, 0)
         grams = ratios[i] * total_grams
         
@@ -398,8 +455,8 @@ def find_best_mix_optimized(target_lab: Tuple[float, float, float],
     # 比率を再正規化して合計100%に（整数で）
     if len(formatted_recipe) == 0:
         # フィルタ後に空になった場合、最大値のみを使用
-        max_idx = np.argmax(ratios)
-        row = df.iloc[max_idx]
+        max_idx_in_used = np.argmax(ratios)
+        row = df.iloc[used_indices[max_idx_in_used]]  # 元のdfから取得
         formatted_recipe = [{
             'code': row['code'],
             'name': row['name'],
@@ -417,10 +474,10 @@ def find_best_mix_optimized(target_lab: Tuple[float, float, float],
             for r in formatted_recipe:
                 r['grams'] = round(r['ratio'] / 100 * total_grams, 1)
     
-    # 混色結果を計算
+    # 混色結果を計算 - 真のKubelka-Munkモデルを使用
     used_colors = [all_colors_lab[i] for i in used_indices]
-    used_ratios = [ratios[i] for i in used_indices]
-    mixed_lab = simple_lab_mix(used_colors, used_ratios)
+    used_ratios = ratios
+    mixed_lab = kubelka_munk_mix(used_colors, used_ratios)
     delta_e = calculate_delta_e(target_lab, mixed_lab)
     
     return {
