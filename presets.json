@@ -1,0 +1,877 @@
+{
+  "presets": [
+    {
+      "id": "zero_gray_green_nakajima",
+      "name": "零戦 上面灰緑色(中島系)",
+      "category": "日本海軍航空機",
+      "L": 58.4,
+      "a": -8.2,
+      "b": 12.6,
+      "description": "中島製零戦の上面色。灰色がかった緑色。"
+    },
+    {
+      "id": "zero_gray_green_mitsubishi",
+      "name": "零戦 上面灰緑色(三菱系)",
+      "category": "日本海軍航空機",
+      "L": 56.8,
+      "a": -6.5,
+      "b": 10.4,
+      "description": "三菱製零戦の上面色。中島系より若干明るい。"
+    },
+    {
+      "id": "zero_dark_green_nakajima",
+      "name": "零戦 暗緑色(中島系)",
+      "category": "日本海軍航空機",
+      "L": 32.4,
+      "a": -12.5,
+      "b": 8.3,
+      "description": "中島製の暗緑色迷彩。濃い緑色。"
+    },
+    {
+      "id": "zero_dark_green_mitsubishi",
+      "name": "零戦 暗緑色(三菱系)",
+      "category": "日本海軍航空機",
+      "L": 34.2,
+      "a": -10.8,
+      "b": 6.8,
+      "description": "三菱製の暗緑色迷彩。"
+    },
+    {
+      "id": "zero_black_green_nakajima",
+      "name": "零戦 黒緑色(中島系)",
+      "category": "日本海軍航空機",
+      "L": 22.4,
+      "a": -8.5,
+      "b": 4.2,
+      "description": "中島製の黒緑色。非常に暗い緑。"
+    },
+    {
+      "id": "zero_black_green_mitsubishi",
+      "name": "零戦 黒緑色(三菱系)",
+      "category": "日本海軍航空機",
+      "L": 24.6,
+      "a": -7.2,
+      "b": 3.8,
+      "description": "三菱製の黒緑色。"
+    },
+    {
+      "id": "zero_lower_gray_nakajima",
+      "name": "零戦 下面灰色(中島系)",
+      "category": "日本海軍航空機",
+      "L": 54.2,
+      "a": -1.8,
+      "b": -3.2,
+      "description": "中島製零戦の下面色。灰色。"
+    },
+    {
+      "id": "zero_lower_gray_mitsubishi",
+      "name": "零戦 下面灰色(三菱系)",
+      "category": "日本海軍航空機",
+      "L": 56.8,
+      "a": -2.2,
+      "b": -4.5,
+      "description": "三菱製零戦の下面色。"
+    },
+    {
+      "id": "cockpit_nakajima",
+      "name": "コックピット色(中島系)",
+      "category": "日本海軍航空機",
+      "L": 52.8,
+      "a": -6.4,
+      "b": 8.5,
+      "description": "中島製機のコックピット内部色。"
+    },
+    {
+      "id": "cockpit_mitsubishi",
+      "name": "コックピット色(三菱系)",
+      "category": "日本海軍航空機",
+      "L": 54.6,
+      "a": -4.8,
+      "b": 6.2,
+      "description": "三菱製機のコックピット内部色。"
+    },
+    {
+      "id": "interior_nakajima",
+      "name": "機体内部色(中島系)",
+      "category": "日本海軍航空機",
+      "L": 68.4,
+      "a": 2.8,
+      "b": 18.6,
+      "description": "中島製機の機体内部色。アイボリー系。"
+    },
+    {
+      "id": "interior_mitsubishi",
+      "name": "機体内部色(三菱系)",
+      "category": "日本海軍航空機",
+      "L": 72.5,
+      "a": 1.8,
+      "b": 16.4,
+      "description": "三菱製機の機体内部色。"
+    },
+    {
+      "id": "german_dark_yellow_1944",
+      "name": "ダークイエロー1944年型",
+      "category": "ドイツ軍戦車",
+      "L": 68.4,
+      "a": 6.8,
+      "b": 42.5,
+      "description": "1944年のドイツ戦車基本色。黄土色。"
+    },
+    {
+      "id": "german_dark_yellow_1945",
+      "name": "ダークイエロー1945年型",
+      "category": "ドイツ軍戦車",
+      "L": 72.5,
+      "a": 4.2,
+      "b": 38.6,
+      "description": "1945年のダークイエロー。やや明るめ。"
+    },
+    {
+      "id": "german_red_brown",
+      "name": "レッドブラウン",
+      "category": "ドイツ軍戦車",
+      "L": 28.5,
+      "a": 18.3,
+      "b": 12.4,
+      "description": "ドイツ戦車の赤茶色迷彩。"
+    },
+    {
+      "id": "german_olive_green",
+      "name": "オリーブグリーン",
+      "category": "ドイツ軍戦車",
+      "L": 38.5,
+      "a": -8.4,
+      "b": 12.6,
+      "description": "ドイツ戦車の緑色迷彩。"
+    },
+    {
+      "id": "german_gray",
+      "name": "ジャーマングレー",
+      "category": "ドイツ軍戦車",
+      "L": 48.5,
+      "a": -2.4,
+      "b": -3.8,
+      "description": "初期ドイツ戦車の灰色。パンツァーグラウ。"
+    },
+    {
+      "id": "rlm02_gray",
+      "name": "RLM02グレー",
+      "category": "ドイツ空軍",
+      "L": 52.4,
+      "a": -1.2,
+      "b": -2.8,
+      "description": "ドイツ空軍の内部色。"
+    },
+    {
+      "id": "rlm04_yellow",
+      "name": "RLM04イエロー",
+      "category": "ドイツ空軍",
+      "L": 68.4,
+      "a": 6.8,
+      "b": 42.5,
+      "description": "黄色マーキング用。"
+    },
+    {
+      "id": "rlm76_light_blue",
+      "name": "RLM76ライトブルー",
+      "category": "ドイツ空軍",
+      "L": 72.8,
+      "a": -4.5,
+      "b": -12.6,
+      "description": "下面色。明るい青灰色。"
+    },
+    {
+      "id": "rlm78_light_blue",
+      "name": "RLM78ライトブルー",
+      "category": "ドイツ空軍",
+      "L": 74.5,
+      "a": -3.8,
+      "b": -10.2,
+      "description": "下面色。RLM76より明るい。"
+    },
+    {
+      "id": "rlm79_sand_yellow",
+      "name": "RLM79サンドイエロー",
+      "category": "ドイツ空軍",
+      "L": 72.4,
+      "a": 4.2,
+      "b": 28.6,
+      "description": "砂漠迷彩色。"
+    },
+    {
+      "id": "rlm80_olive_green",
+      "name": "RLM80オリーブグリーン",
+      "category": "ドイツ空軍",
+      "L": 42.6,
+      "a": -6.8,
+      "b": 14.2,
+      "description": "上面迷彩色。オリーブグリーン。"
+    },
+    {
+      "id": "rlm81_brown_violet",
+      "name": "RLM81ブラウンバイオレット",
+      "category": "ドイツ空軍",
+      "L": 32.8,
+      "a": 8.6,
+      "b": 6.4,
+      "description": "上面迷彩色。茶紫色。"
+    },
+    {
+      "id": "rlm82_light_green",
+      "name": "RLM82ライトグリーン",
+      "category": "ドイツ空軍",
+      "L": 58.4,
+      "a": -8.2,
+      "b": 18.6,
+      "description": "上面迷彩色。明るい緑。"
+    },
+    {
+      "id": "rlm83_dark_green",
+      "name": "RLM83ダークグリーン",
+      "category": "ドイツ空軍",
+      "L": 32.5,
+      "a": -10.4,
+      "b": 8.6,
+      "description": "上面迷彩色。暗い緑。"
+    },
+    {
+      "id": "us_olive_drab",
+      "name": "オリーブドラブ",
+      "category": "米軍",
+      "L": 38.5,
+      "a": -8.4,
+      "b": 12.6,
+      "description": "米軍車両・航空機の標準色。"
+    },
+    {
+      "id": "us_dark_earth",
+      "name": "ダークアース",
+      "category": "米軍",
+      "L": 28.6,
+      "a": 8.5,
+      "b": 14.2,
+      "description": "米軍の茶色迷彩。"
+    },
+    {
+      "id": "fs36440_gray",
+      "name": "FS36440 エアサペリオリティグレー",
+      "category": "米軍(FS規格)",
+      "L": 52.8,
+      "a": -1.2,
+      "b": -2.8,
+      "description": "F-15などの主力戦闘機色。"
+    },
+    {
+      "id": "fs36375_gray",
+      "name": "FS36375 ライトゴーストグレー",
+      "category": "米軍(FS規格)",
+      "L": 68.5,
+      "a": -2.8,
+      "b": -4.5,
+      "description": "F-14などの明るい灰色。"
+    },
+    {
+      "id": "fs35237_gray",
+      "name": "FS35237 ミディアムグレー",
+      "category": "米軍(FS規格)",
+      "L": 58.4,
+      "a": -1.5,
+      "b": -3.2,
+      "description": "中間色の灰色。"
+    },
+    {
+      "id": "fs36320_dark_gray",
+      "name": "FS36320 ダークコンパスグレー",
+      "category": "米軍(FS規格)",
+      "L": 38.6,
+      "a": -1.8,
+      "b": -2.5,
+      "description": "暗い灰色。"
+    },
+    {
+      "id": "fs36118_gun_gray",
+      "name": "FS36118 ガングレー",
+      "category": "米軍(FS規格)",
+      "L": 48.5,
+      "a": -2.4,
+      "b": -3.8,
+      "description": "銃色グレー。"
+    },
+    {
+      "id": "fs35622_camo_gray",
+      "name": "FS35622 カモグレー",
+      "category": "米軍(FS規格)",
+      "L": 48.2,
+      "a": -1.6,
+      "b": -2.8,
+      "description": "迷彩グレー。"
+    },
+    {
+      "id": "fs34096_dark_gray",
+      "name": "FS34096 ダークグレー",
+      "category": "米軍(FS規格)",
+      "L": 32.4,
+      "a": -1.2,
+      "b": -1.8,
+      "description": "濃い灰色。"
+    },
+    {
+      "id": "fs34087_olive_drab",
+      "name": "FS34087 オリーブドラブ",
+      "category": "米軍(FS規格)",
+      "L": 38.5,
+      "a": -8.4,
+      "b": 12.6,
+      "description": "FS規格のオリーブドラブ。"
+    },
+    {
+      "id": "fs34102_dark_green",
+      "name": "FS34102 ダークグリーン",
+      "category": "米軍(FS規格)",
+      "L": 28.4,
+      "a": -12.5,
+      "b": 8.3,
+      "description": "濃い緑色。"
+    },
+    {
+      "id": "fs34159_green",
+      "name": "FS34159 グリーン",
+      "category": "米軍(FS規格)",
+      "L": 42.8,
+      "a": -10.6,
+      "b": 14.5,
+      "description": "標準的な緑色。"
+    },
+    {
+      "id": "fs35414_white",
+      "name": "FS35414 インシグニアホワイト",
+      "category": "米軍(FS規格)",
+      "L": 88.5,
+      "a": 0.2,
+      "b": 0.3,
+      "description": "マーキング用白色。"
+    },
+    {
+      "id": "fs35450_blue",
+      "name": "FS35450 インシグニアブルー",
+      "category": "米軍(FS規格)",
+      "L": 32.4,
+      "a": -12.5,
+      "b": -38.6,
+      "description": "マーキング用青色。"
+    },
+    {
+      "id": "fs11136_red",
+      "name": "FS11136 インシグニアレッド",
+      "category": "米軍(FS規格)",
+      "L": 48.2,
+      "a": 68.4,
+      "b": 45.6,
+      "description": "マーキング用赤色。"
+    },
+    {
+      "id": "fs33531_yellow",
+      "name": "FS33531 イエロー",
+      "category": "米軍(FS規格)",
+      "L": 78.5,
+      "a": 12.8,
+      "b": 68.4,
+      "description": "黄色マーキング。"
+    },
+    {
+      "id": "fs30219_dark_green",
+      "name": "FS30219 ダークグリーン",
+      "category": "米軍(FS規格)",
+      "L": 28.4,
+      "a": -12.5,
+      "b": 8.3,
+      "description": "濃緑色。"
+    },
+    {
+      "id": "fs30257_medium_green",
+      "name": "FS30257 ミディアムグリーン",
+      "category": "米軍(FS規格)",
+      "L": 42.8,
+      "a": -10.6,
+      "b": 14.5,
+      "description": "中間緑色。"
+    },
+    {
+      "id": "fs32246_yellow_green",
+      "name": "FS32246 イエローグリーン",
+      "category": "米軍(FS規格)",
+      "L": 58.4,
+      "a": -8.2,
+      "b": 18.6,
+      "description": "黄緑色。"
+    },
+    {
+      "id": "fs30140_dark_brown",
+      "name": "FS30140 ダークブラウン",
+      "category": "米軍(FS規格)",
+      "L": 24.6,
+      "a": 12.3,
+      "b": 15.8,
+      "description": "濃い茶色。"
+    },
+    {
+      "id": "fs30117_earth_brown",
+      "name": "FS30117 アースブラウン",
+      "category": "米軍(FS規格)",
+      "L": 28.6,
+      "a": 8.5,
+      "b": 14.2,
+      "description": "土色茶色。"
+    },
+    {
+      "id": "fs33446_chrome_yellow",
+      "name": "FS33446 クロームイエロー",
+      "category": "米軍(FS規格)",
+      "L": 85.2,
+      "a": 5.8,
+      "b": 78.3,
+      "description": "鮮やかな黄色。"
+    },
+    {
+      "id": "ship_bottom_color",
+      "name": "艦底色",
+      "category": "日本海軍艦船",
+      "L": 32.4,
+      "a": 8.2,
+      "b": 18.5,
+      "description": "日本海軍艦船の艦底色。赤茶色。"
+    },
+    {
+      "id": "warship_color_1",
+      "name": "軍艦色(1)",
+      "category": "日本海軍艦船",
+      "L": 38.2,
+      "a": -3.5,
+      "b": -6.8,
+      "description": "日本海軍艦船の標準色。暗い灰色。"
+    },
+    {
+      "id": "warship_color_2",
+      "name": "軍艦色(2)",
+      "category": "日本海軍艦船",
+      "L": 42.5,
+      "a": -3.8,
+      "b": -7.2,
+      "description": "軍艦色の別配合。"
+    },
+    {
+      "id": "navy_gray",
+      "name": "灰色(海軍)",
+      "category": "日本海軍艦船",
+      "L": 42.8,
+      "a": -2.3,
+      "b": -4.5,
+      "description": "海軍の灰色。"
+    },
+    {
+      "id": "kure_gray",
+      "name": "呉海軍工廠グレー",
+      "category": "日本海軍艦船",
+      "L": 48.5,
+      "a": -3.2,
+      "b": -6.5,
+      "description": "呉工廠で塗装された艦船の灰色。"
+    },
+    {
+      "id": "sasebo_gray",
+      "name": "佐世保海軍工廠グレー",
+      "category": "日本海軍艦船",
+      "L": 52.4,
+      "a": -2.8,
+      "b": -5.2,
+      "description": "佐世保工廠の灰色。"
+    },
+    {
+      "id": "maizuru_gray",
+      "name": "舞鶴海軍工廠グレー",
+      "category": "日本海軍艦船",
+      "L": 54.8,
+      "a": -2.5,
+      "b": -4.8,
+      "description": "舞鶴工廠の灰色。"
+    },
+    {
+      "id": "yokosuka_gray",
+      "name": "横須賀海軍工廠グレー",
+      "category": "日本海軍艦船",
+      "L": 50.6,
+      "a": -2.6,
+      "b": -5.4,
+      "description": "横須賀工廠の灰色。"
+    },
+    {
+      "id": "wood_deck",
+      "name": "木甲板色",
+      "category": "日本海軍艦船",
+      "L": 48.6,
+      "a": 8.4,
+      "b": 22.5,
+      "description": "艦船の木製甲板色。"
+    },
+    {
+      "id": "linoleum_deck",
+      "name": "リノリウム甲板色",
+      "category": "日本海軍艦船",
+      "L": 42.5,
+      "a": 6.8,
+      "b": 18.4,
+      "description": "リノリウム張り甲板の色。"
+    },
+    {
+      "id": "british_scc15",
+      "name": "SCC15 ライトアドミラルティグレー",
+      "category": "イギリス軍",
+      "L": 68.5,
+      "a": -2.8,
+      "b": -4.5,
+      "description": "イギリス海軍の明るい灰色。"
+    },
+    {
+      "id": "british_desert_yellow",
+      "name": "デザートイエロー",
+      "category": "イギリス軍",
+      "L": 72.4,
+      "a": 4.2,
+      "b": 28.6,
+      "description": "北アフリカ戦線の砂漠色。"
+    },
+    {
+      "id": "british_bronze_green",
+      "name": "ブロンズグリーン",
+      "category": "イギリス軍",
+      "L": 28.4,
+      "a": -12.5,
+      "b": 8.3,
+      "description": "イギリス戦車の濃緑色。"
+    },
+    {
+      "id": "soviet_green",
+      "name": "ソビエトグリーン",
+      "category": "ソ連軍",
+      "L": 42.8,
+      "a": -10.6,
+      "b": 14.5,
+      "description": "ソ連戦車の標準色。"
+    },
+    {
+      "id": "soviet_brown",
+      "name": "ソビエトブラウン",
+      "category": "ソ連軍",
+      "L": 28.6,
+      "a": 8.5,
+      "b": 14.2,
+      "description": "ソ連戦車の茶色迷彩。"
+    },
+    {
+      "id": "intermediate_blue",
+      "name": "インタミディエイトブルー",
+      "category": "米軍航空機",
+      "L": 54.6,
+      "a": -4.2,
+      "b": -18.8,
+      "description": "米海軍機の青灰色。"
+    },
+    {
+      "id": "sea_blue",
+      "name": "シーブルー",
+      "category": "米軍航空機",
+      "L": 22.6,
+      "a": -10.4,
+      "b": -28.6,
+      "description": "米海軍機の濃青色。"
+    },
+    {
+      "id": "sky_blue",
+      "name": "スカイブルー",
+      "category": "米軍航空機",
+      "L": 72.5,
+      "a": -6.8,
+      "b": -22.4,
+      "description": "明るい空色。"
+    },
+    {
+      "id": "neutral_gray",
+      "name": "ニュートラルグレー",
+      "category": "基本色",
+      "L": 52.8,
+      "a": 0.2,
+      "b": 0.3,
+      "description": "標準的な中間灰色。"
+    },
+    {
+      "id": "dark_gray",
+      "name": "ダークグレー",
+      "category": "基本色",
+      "L": 32.5,
+      "a": 0.2,
+      "b": 0.4,
+      "description": "暗い灰色。"
+    },
+    {
+      "id": "light_gray",
+      "name": "ライトグレー",
+      "category": "基本色",
+      "L": 72.5,
+      "a": 0.2,
+      "b": 0.3,
+      "description": "明るい灰色。"
+    },
+    {
+      "id": "flat_white",
+      "name": "フラットホワイト",
+      "category": "基本色",
+      "L": 92.5,
+      "a": 0.1,
+      "b": 0.2,
+      "description": "つや消し白色。"
+    },
+    {
+      "id": "flat_black",
+      "name": "フラットブラック",
+      "category": "基本色",
+      "L": 16.2,
+      "a": 0.1,
+      "b": 0.2,
+      "description": "つや消し黒色。"
+    },
+    {
+      "id": "red_brown",
+      "name": "レッドブラウン",
+      "category": "基本色",
+      "L": 28.5,
+      "a": 18.3,
+      "b": 12.4,
+      "description": "赤茶色。"
+    },
+    {
+      "id": "mahogany",
+      "name": "マホガニー",
+      "category": "基本色",
+      "L": 32.8,
+      "a": 12.6,
+      "b": 18.4,
+      "description": "マホガニー材の色。"
+    },
+    {
+      "id": "wood_brown",
+      "name": "ウッドブラウン",
+      "category": "基本色",
+      "L": 34.2,
+      "a": 10.5,
+      "b": 16.8,
+      "description": "木材の茶色。"
+    },
+    {
+      "id": "tan",
+      "name": "タン",
+      "category": "基本色",
+      "L": 52.8,
+      "a": 8.6,
+      "b": 24.5,
+      "description": "ベージュ系の明るい茶色。"
+    },
+    {
+      "id": "cream_yellow",
+      "name": "クリームイエロー",
+      "category": "基本色",
+      "L": 82.4,
+      "a": 2.8,
+      "b": 28.5,
+      "description": "クリーム色。"
+    },
+    {
+      "id": "sail_color",
+      "name": "セールカラー",
+      "category": "基本色",
+      "L": 68.4,
+      "a": 2.8,
+      "b": 18.6,
+      "description": "帆布の色。オフホワイト。"
+    },
+    {
+      "id": "burnt_iron",
+      "name": "焼鉄色",
+      "category": "メタリック",
+      "L": 18.5,
+      "a": 2.8,
+      "b": 4.2,
+      "description": "焼けた鉄の色。"
+    },
+    {
+      "id": "dark_iron",
+      "name": "ダークアイアン",
+      "category": "メタリック",
+      "L": 22.5,
+      "a": 1.8,
+      "b": 2.4,
+      "description": "暗い鉄色。"
+    },
+    {
+      "id": "silver",
+      "name": "シルバー",
+      "category": "メタリック",
+      "L": 72.5,
+      "a": 0.1,
+      "b": 0.2,
+      "description": "銀色。"
+    },
+    {
+      "id": "gold",
+      "name": "ゴールド",
+      "category": "メタリック",
+      "L": 68.3,
+      "a": 8.2,
+      "b": 42.5,
+      "description": "金色。"
+    },
+    {
+      "id": "copper",
+      "name": "カッパー",
+      "category": "メタリック",
+      "L": 42.8,
+      "a": 18.6,
+      "b": 28.4,
+      "description": "銅色。"
+    },
+    {
+      "id": "chrome_silver",
+      "name": "クロームシルバー",
+      "category": "メタリック",
+      "L": 78.2,
+      "a": 0.0,
+      "b": 0.1,
+      "description": "クローム鍍金の銀色。"
+    },
+    {
+      "id": "titanium_silver",
+      "name": "チタンシルバー",
+      "category": "メタリック",
+      "L": 74.6,
+      "a": 0.1,
+      "b": 0.2,
+      "description": "チタン金属色。"
+    },
+    {
+      "id": "flat_aluminum",
+      "name": "フラットアルミ",
+      "category": "メタリック",
+      "L": 72.5,
+      "a": 0.1,
+      "b": 0.2,
+      "description": "つや消しアルミニウム。"
+    },
+    {
+      "id": "dull_aluminum",
+      "name": "ダルアルミナム",
+      "category": "メタリック",
+      "L": 68.4,
+      "a": 0.2,
+      "b": 0.3,
+      "description": "鈍い光沢のアルミ。"
+    },
+    {
+      "id": "character_flesh",
+      "name": "キャラクターフレッシュ",
+      "category": "キャラクター",
+      "L": 78.5,
+      "a": 12.4,
+      "b": 18.6,
+      "description": "キャラクター肌色。"
+    },
+    {
+      "id": "shiden_kai_green",
+      "name": "紫電改グリーン",
+      "category": "日本海軍航空機",
+      "L": 42.8,
+      "a": -8.6,
+      "b": 10.4,
+      "description": "紫電改の緑色。"
+    },
+    {
+      "id": "hien_gray",
+      "name": "飛燕グレー",
+      "category": "日本陸軍航空機",
+      "L": 54.2,
+      "a": -1.8,
+      "b": -3.2,
+      "description": "飛燕の灰色。"
+    },
+    {
+      "id": "monkey_brown",
+      "name": "モンキーブラウン",
+      "category": "ドイツ空軍",
+      "L": 38.5,
+      "a": 6.8,
+      "b": 18.4,
+      "description": "ドイツ空軍の茶色。"
+    },
+    {
+      "id": "racing_green",
+      "name": "レーシンググリーン",
+      "category": "レーシング",
+      "L": 22.4,
+      "a": -10.6,
+      "b": 6.8,
+      "description": "ブリティッシュレーシンググリーン。"
+    },
+    {
+      "id": "italian_red",
+      "name": "イタリアンレッド",
+      "category": "レーシング",
+      "L": 42.5,
+      "a": 52.6,
+      "b": 38.4,
+      "description": "フェラーリレッド。"
+    },
+    {
+      "id": "marlboro_red",
+      "name": "マールボロレッド",
+      "category": "レーシング",
+      "L": 48.2,
+      "a": 68.4,
+      "b": 45.6,
+      "description": "マールボロのレッド。"
+    },
+    {
+      "id": "pure_blue",
+      "name": "ピュアブルー",
+      "category": "レーシング",
+      "L": 32.4,
+      "a": -12.5,
+      "b": -38.6,
+      "description": "鮮やかな青。"
+    },
+    {
+      "id": "racing_yellow",
+      "name": "レーシングイエロー",
+      "category": "レーシング",
+      "L": 85.2,
+      "a": 5.8,
+      "b": 78.3,
+      "description": "レース用黄色。"
+    },
+    {
+      "id": "racing_red",
+      "name": "レーシングレッド",
+      "category": "レーシング",
+      "L": 48.2,
+      "a": 68.4,
+      "b": 45.6,
+      "description": "レース用赤色。"
+    },
+    {
+      "id": "light_gun_metallic",
+      "name": "ライトガンメタリック",
+      "category": "メタリック",
+      "L": 48.2,
+      "a": -1.6,
+      "b": -2.8,
+      "description": "明るいガンメタ色。"
+    }
+  ]
+}
